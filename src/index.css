@@ -95,7 +95,6 @@
   [role="dialog"], 
   button:not(.print-show),
   .bg-slate-900\/40, 
-  .shadow-sm,
   input:not([type="month"]) {
     display: none !important;
   }

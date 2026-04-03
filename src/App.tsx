@@ -728,7 +728,7 @@ export default function App() {
                              const hasStatus = status.id !== 'trabalha';
                              const isSunday = dia.getDay() === 0;
                              return (
-                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '')} ${isSunday && !hasStatus ? 'bg-blue-50/50 print-sunday' : ''}`}>
+                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '')} ${isSunday ? 'bg-blue-50/80 print-sunday' : ''}`}>
                                  <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:h-8 flex items-center justify-center font-bold text-xs print:text-[10px] ${status.textColor}`}>
                                    {hasStatus ? status.short : <span className="opacity-0 group-hover/row:opacity-100 text-lg font-light">+</span>}
                                  </button>
