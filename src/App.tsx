@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Calendar, MapPin, Printer, Users, UserPlus, 
+  Calendar, Printer, Users, UserPlus, 
   Trash2, Edit2, Check, X, Building, ChefHat, Utensils, MessageSquare, Send,
   CheckCircle2, AlertCircle, RefreshCw
 } from 'lucide-react';
@@ -180,7 +180,7 @@ export default function App() {
     setLoginError('');
 
     try {
-      const { data: userData, error } = await supabase
+      const { data: userData } = await supabase
         .from('usuarios_gestao')
         .select('*')
         .eq('username', loginForm.username)
