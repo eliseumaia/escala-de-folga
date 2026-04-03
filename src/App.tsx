@@ -729,7 +729,10 @@ export default function App() {
                              const isSunday = dia.getDay() === 0;
                              return (
                                <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '').replace('bg-', 'print:bg-')} ${isSunday ? 'bg-violet-50/60 print-sunday' : ''}`}>
-                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:h-8 flex items-center justify-center font-bold text-xs print:text-[11px] print:text-black print-status ${status.textColor}`}>
+                                 <div className="hidden print:flex items-center justify-center font-black text-black text-[10px] h-8 w-full print-status-text">
+                                   {hasStatus ? status.short : ''}
+                                 </div>
+                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:hidden flex items-center justify-center font-bold text-xs ${status.textColor}`}>
                                    {hasStatus ? status.short : <span className="opacity-0 group-hover/row:opacity-100 text-lg font-light">+</span>}
                                  </button>
                                </td>

@@ -79,67 +79,84 @@
 @media print {
   @page {
     size: A4 landscape;
-    margin: 3mm;
+    margin: 5mm;
   }
   
-  body {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    background-color: white !important;
-  }
-
-  /* Hide everything by default */
-  header, 
-  nav, 
-  .print-hidden, 
-  [role="dialog"], 
-  button:not(.print-show),
-  .bg-slate-900\/40, 
-  input:not([type="month"]) {
-    display: none !important;
-  }
-
-  /* Ensure the table container is visible and full width */
-  .max-w-\[1600px\] {
-    max-width: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  .overflow-x-auto {
+  /* Reset All Layout-Breaking Properties */
+  body, html, #root, .App, main, div, section {
     overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    position: static !important;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  /* Force table container to show everything */
+  .overflow-x-auto, .w-full, .max-w-\[1600px\] {
+    overflow: visible !important;
+    width: 100% !important;
+    display: block !important;
+    max-width: none !important;
   }
 
   table {
     width: 100% !important;
     table-layout: auto !important;
     border-collapse: collapse !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
+    border: 1px solid #000 !important;
+  }
+
+  thead {
+    display: table-header-group !important;
   }
 
   th, td {
-    border: 1px solid #ddd !important;
-    padding: 2px !important;
+    border: 1px solid #ccc !important;
+    padding: 1px !important;
+    color: black !important;
+    background-color: transparent !important;
+  }
+
+  /* Force color printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
   .print-sunday {
-    background-color: #f5f3ff !important; /* violet-50 */
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    background-color: #f5f3ff !important;
   }
 
-  .print-status {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    font-weight: bold !important;
+  .print-status-text {
+    display: block !important;
     color: black !important;
+    font-weight: bold !important;
+    font-size: 10px !important;
   }
 
-  /* Adjust Nama column for print */
+  /* Hide everything irrelevant */
+  .print-hidden, 
+  header, 
+  nav, 
+  button:not(.print-show), 
+  [role="dialog"], 
+  .bg-slate-900\/40,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Fix first column being cut or sticky */
   th:first-child, td:first-child {
-    min-width: 100px !important;
-    position: relative !important;
-    left: 0 !important;
+    position: static !important;
+    width: 120px !important;
+    min-width: 120px !important;
     background-color: white !important;
   }
 }
