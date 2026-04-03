@@ -340,8 +340,6 @@ export default function App() {
     setNewSetorName('');
   };
 
-  const [newFunc, setNewFunc] = useState({ nome: '', setor: '', departamento: 'SALÃO', turno: '' });
-  const [editingFunc, setEditingFunc] = useState<Funcionario | null>(null);
 
   useEffect(() => {
      if (isManageModalOpen) {
