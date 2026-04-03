@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { supabase } from './lib/supabase';
 
 // --- Types ---
-type Funcionario = { id: string; nome: string; loja: string; setor: string; departamento: string; turno?: string };
+type Funcionario = { id: string; nome: string; loja: string; setor: string; departamento: string };
 type StatusOption = { id: string; label: string; short: string; colorClass: string; textColor: string };
 type Mensagem = { id: string; texto: string; autor: string; data: string; loja?: string; mes_ano?: string };
 type User = {
@@ -491,35 +491,45 @@ export default function App() {
                 <form onSubmit={handleAddFuncionario} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
                     {editingFunc ? <Edit2 className="w-4 h-4 text-emerald-500" /> : <UserPlus className="w-4 h-4 text-indigo-500" />}
-                    {editingFunc ? 'Editar Funcionário' : 'Adicionar Funcionário'}
+                    {editingFunc ? 'Editar Integrante' : 'Adicionar Integrante'}
                   </h3>
                   <input type="text" required placeholder="Nome Completo" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.nome} onChange={e => setNewFunc({...newFunc, nome: e.target.value})} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.departamento} onChange={e => setNewFunc({...newFunc, departamento: e.target.value, setor: (e.target.value === 'SALÃO' ? setoresSalao : setoresCozinha)[0] || ''})}>
-                      <option value="SALÃO">SALÃO</option>
-                      <option value="COZINHA">COZINHA</option>
-                    </select>
-                    <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.setor} onChange={e => setNewFunc({...newFunc, setor: e.target.value})}>
-                      {(newFunc.departamento === 'SALÃO' ? setoresSalao : setoresCozinha).map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <input type="text" placeholder="Turno (Ex: Noite, 10:00 as 18:00)" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.turno} onChange={e => setNewFunc({...newFunc, turno: e.target.value})} />
                   
-                  <div className="flex gap-2">
-                    <button type="submit" className={`flex-1 ${editingFunc ? 'bg-emerald-600' : 'bg-indigo-600'} text-white py-2 rounded-lg text-sm font-bold`}>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Departamento</label>
+                      <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600" value={newFunc.departamento} onChange={e => setNewFunc({...newFunc, departamento: e.target.value, setor: (e.target.value === 'SALÃO' ? setoresSalao : setoresCozinha)[0] || ''})}>
+                        <option value="SALÃO">SALÃO</option>
+                        <option value="COZINHA">COZINHA</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Turno</label>
+                      <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-emerald-600" value={newFunc.setor} onChange={e => setNewFunc({...newFunc, setor: e.target.value})}>
+                        {(newFunc.departamento === 'SALÃO' ? setoresSalao : setoresCozinha).map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button type="submit" className={`flex-1 ${editingFunc ? 'bg-emerald-600' : 'bg-indigo-600'} text-white py-2.5 rounded-lg text-sm font-bold shadow-md hover:opacity-90`}>
                       {editingFunc ? 'Salvar Alterações' : 'Cadastrar na Equipe'}
                     </button>
                     {editingFunc && (
-                      <button type="button" onClick={() => { setEditingFunc(null); setNewFunc({ nome: '', setor: '', departamento: deptoSelecionado, turno: '' }); }} className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold">
+                      <button type="button" onClick={() => { setEditingFunc(null); setNewFunc({ nome: '', setor: '', departamento: deptoSelecionado, turno: '' }); }} className="bg-slate-200 text-slate-600 px-4 py-2.5 rounded-lg text-sm font-bold">
                         Cancelar
                       </button>
                     )}
                   </div>
                 </form>
+
                 <form onSubmit={handleAddSetor} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                  <h3 className="text-sm font-semibold flex items-center gap-2"><Building className="w-4 h-4 text-orange-500" /> Adicionar Novo Setor</h3>
-                  <input type="text" required placeholder="Nome do Setor (Ex: GARÇOM)" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm uppercase" value={newSetorName} onChange={e => setNewSetorName(e.target.value)} />
-                  <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-bold">Criar Setor</button>
+                  <h3 className="text-sm font-semibold flex items-center gap-2"><Building className="w-4 h-4 text-orange-500" /> Cadastrar Novo Turno</h3>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Nome do Turno (Ex: MANHÃ, NOITE)</label>
+                    <input type="text" required placeholder="Digite o nome do turno..." className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm uppercase font-bold" value={newSetorName} onChange={e => setNewSetorName(e.target.value)} />
+                  </div>
+                  <button type="submit" className="w-full bg-orange-500 text-white py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-orange-600">Criar Turno</button>
                 </form>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -532,11 +542,11 @@ export default function App() {
                           <Avatar nome={f.nome} />
                           <div>
                             <p className="text-sm font-bold text-slate-800">{f.nome}</p>
-                            <p className="text-[10px] text-slate-500 italic">{f.setor} {f.turno ? `• ${f.turno}` : ''}</p>
+                            <p className="text-[10px] text-slate-500 italic uppercase font-black tracking-widest">{f.setor}</p>
                           </div>
                         </div>
                         <div className="flex gap-1">
-                          <button onClick={() => { setEditingFunc(f); setNewFunc({ nome: f.nome, setor: f.setor, departamento: f.departamento, turno: f.turno || '' }); }} className="text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition" title="Editar"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => { setEditingFunc(f); setNewFunc({ nome: f.nome, setor: f.setor, departamento: f.departamento, turno: '' }); }} className="text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition" title="Editar"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDeleteFunc(f.id)} className="text-rose-500 p-2 hover:bg-rose-50 rounded-lg transition" title="Excluir"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
@@ -544,11 +554,11 @@ export default function App() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Setores</h4>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Turnos Cadastrados</h4>
                   <div className="border border-slate-200 rounded-xl divide-y overflow-hidden max-h-60 overflow-y-auto">
                     {currentSetores.map(s => (
-                      <div key={s} className="flex items-center justify-between p-3 bg-white">
-                        <span className="text-sm font-bold uppercase">{s}</span>
+                      <div key={s} className="flex items-center justify-between p-3 bg-white hover:bg-orange-50/30">
+                        <span className="text-sm font-black text-orange-600 uppercase italic">{s}</span>
                         <button onClick={() => handleDeleteSetor(s)} className="text-rose-500 p-2 hover:bg-rose-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     ))}
@@ -678,21 +688,24 @@ export default function App() {
                   if (funcs.length === 0) return null;
                   return (
                     <React.Fragment key={setorIdx}>
-                      <tr className="bg-slate-100/80 group print:bg-transparent border-y-2 border-slate-200">
+                      <tr className="bg-slate-100/90 group print:bg-slate-50 border-y-2 border-slate-200">
                         <td colSpan={diasNoMes + 1} className="py-2.5 px-4">
-                          <div className="flex justify-between items-center relative">
-                            {editingSetorIdx === setorIdx ? (
-                              <div className="flex gap-2 w-full max-w-sm">
-                                <input autoFocus className="w-full border rounded px-2 text-sm font-bold outline-none" value={editSetorTempName} onChange={e => setEditSetorTempName(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') saveSetorName(setorNome, editSetorTempName); if(e.key === 'Escape') setEditingSetorIdx(null); }} />
-                                <button onClick={() => saveSetorName(setorNome, editSetorTempName)} className="text-emerald-600"><Check className="w-5 h-5" /></button>
-                                <button onClick={() => setEditingSetorIdx(null)}><X className="w-5 h-5" /></button>
-                              </div>
-                            ) : (
-                              <>
-                                <h3 className="text-xs font-black tracking-widest text-slate-800 uppercase print:text-center w-full">{setorNome}</h3>
-                                <button onClick={() => { setEditSetorTempName(setorNome); setEditingSetorIdx(setorIdx); }} className="opacity-0 group-hover:opacity-100 print:hidden absolute right-0"><Edit2 className="w-3.5 h-3.5 text-slate-400" /></button>
-                              </>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <div className="w-1.5 h-5 bg-orange-500 rounded-full" />
+                            <div className="flex flex-1 justify-between items-center">
+                              {editingSetorIdx === setorIdx ? (
+                                <div className="flex gap-2 w-full max-w-sm">
+                                  <input autoFocus className="w-full border rounded px-2 py-1 text-sm font-black outline-none uppercase" value={editSetorTempName} onChange={e => setEditSetorTempName(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') saveSetorName(setorNome, editSetorTempName); if(e.key === 'Escape') setEditingSetorIdx(null); }} />
+                                  <button onClick={() => saveSetorName(setorNome, editSetorTempName)} className="text-emerald-600"><Check className="w-5 h-5" /></button>
+                                  <button onClick={() => setEditingSetorIdx(null)}><X className="w-5 h-5" /></button>
+                                </div>
+                              ) : (
+                                <>
+                                  <h3 className="text-xs font-black tracking-widest text-slate-700 uppercase italic">TURNO: {setorNome}</h3>
+                                  <button onClick={() => { setEditSetorTempName(setorNome); setEditingSetorIdx(setorIdx); }} className="opacity-0 group-hover:opacity-100 print:hidden absolute right-0"><Edit2 className="w-3.5 h-3.5 text-slate-400" /></button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -704,14 +717,9 @@ export default function App() {
                                 <Avatar nome={func.nome} />
                               </div>
                               <div className="flex flex-col">
-                                <span className="font-bold text-slate-800 print:text-black text-[12px] truncate max-w-[120px] print:max-w-none">
+                                <span className="font-bold text-slate-800 print:text-black text-[12.5px] truncate max-w-[130px] print:max-w-none">
                                   {func.nome}
                                 </span>
-                                {func.turno && (
-                                  <span className="text-[8px] font-medium text-slate-400 print:text-black italic leading-none">
-                                    {func.turno}
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </td>
