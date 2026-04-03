@@ -68,6 +68,8 @@ export default function App() {
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [listaUsuarios, setListaUsuarios] = useState<User[]>([]);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newFunc, setNewFunc] = useState({ nome: '', setor: '', departamento: 'SALÃO', turno: '' });
   const [editingFunc, setEditingFunc] = useState<Funcionario | null>(null);
   const [tempUserForm, setTempUserForm] = useState({ username: '', password: '' });
