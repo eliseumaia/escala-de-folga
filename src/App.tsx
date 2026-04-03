@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { supabase } from './lib/supabase';
 
 // --- Types ---
-type Funcionario = { id: string; nome: string; loja: string; setor: string; departamento: string };
+type Funcionario = { id: string; nome: string; loja: string; setor: string; departamento: string; turno?: string };
 type StatusOption = { id: string; label: string; short: string; colorClass: string; textColor: string };
 type Mensagem = { id: string; texto: string; autor: string; data: string; loja?: string; mes_ano?: string };
 type User = {
@@ -68,8 +68,8 @@ export default function App() {
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [listaUsuarios, setListaUsuarios] = useState<User[]>([]);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [newFunc, setNewFunc] = useState({ nome: '', setor: '', departamento: 'SALÃO', turno: '' });
+  const [editingFunc, setEditingFunc] = useState<Funcionario | null>(null);
   const [tempUserForm, setTempUserForm] = useState({ username: '', password: '' });
 
   // Sync States
@@ -338,24 +338,59 @@ export default function App() {
     setNewSetorName('');
   };
 
-  const [newFunc, setNewFunc] = useState({ nome: '', setor: '' });
+  const [newFunc, setNewFunc] = useState({ nome: '', setor: '', departamento: 'SALÃO', turno: '' });
+  const [editingFunc, setEditingFunc] = useState<Funcionario | null>(null);
+
+  useEffect(() => {
+     if (isManageModalOpen) {
+       setNewFunc(prev => ({ 
+         ...prev, 
+         departamento: deptoSelecionado,
+         setor: (deptoSelecionado === 'SALÃO' ? setoresSalao : setoresCozinha)[0] || ''
+       }));
+     }
+  }, [isManageModalOpen, deptoSelecionado, setoresSalao, setoresCozinha]);
+
   const handleAddFuncionario = async (e: React.FormEvent) => {
     e.preventDefault();
-    const targetSetor = newFunc.setor || currentSetores[0] || '';
+    const targetDepto = newFunc.departamento || deptoSelecionado;
+    const sectors = targetDepto === 'SALÃO' ? setoresSalao : setoresCozinha;
+    const targetSetor = newFunc.setor || sectors[0] || '';
+    
     if (!newFunc.nome || !targetSetor) return;
     
+    if (editingFunc) {
+      // Update logic
+      const payload = {
+        nome: newFunc.nome,
+        setor: targetSetor,
+        departamento: targetDepto,
+        turno: newFunc.turno,
+        loja: lojaSelecionada
+      };
+      
+      const { error } = await supabase.from('funcionarios').update(payload).eq('id', editingFunc.id);
+      if (!error) {
+        setFuncionarios(prev => prev.map(f => f.id === editingFunc.id ? { ...f, ...payload } : f));
+        setEditingFunc(null);
+        setNewFunc({ nome: '', setor: sectors[0] || '', departamento: targetDepto, turno: '' });
+      }
+      return;
+    }
+
     const id = Math.random().toString(36).substr(2, 9);
     const payload = {
       id,
       nome: newFunc.nome,
       loja: lojaSelecionada,
       setor: targetSetor,
-      departamento: deptoSelecionado
+      departamento: targetDepto,
+      turno: newFunc.turno
     };
 
     await supabase.from('funcionarios').insert(payload);
     setFuncionarios([...funcionarios, payload]);
-    setNewFunc({ nome: '', setor: currentSetores[0] || '' });
+    setNewFunc({ nome: '', setor: sectors[0] || '', departamento: targetDepto, turno: '' });
   };
 
   const handleDeleteFunc = async (id: string) => {
@@ -454,27 +489,56 @@ export default function App() {
             <div className="p-6 overflow-y-auto flex-1 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <form onSubmit={handleAddFuncionario} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                  <h3 className="text-sm font-semibold flex items-center gap-2"><UserPlus className="w-4 h-4 text-indigo-500" /> Adicionar Funcionário</h3>
-                  <input type="text" required placeholder="Nome" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.nome} onChange={e => setNewFunc({...newFunc, nome: e.target.value})} />
-                  <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.setor} onChange={e => setNewFunc({...newFunc, setor: e.target.value})}>
-                    {currentSetores.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-bold">Cadastrar</button>
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    {editingFunc ? <Edit2 className="w-4 h-4 text-emerald-500" /> : <UserPlus className="w-4 h-4 text-indigo-500" />}
+                    {editingFunc ? 'Editar Funcionário' : 'Adicionar Funcionário'}
+                  </h3>
+                  <input type="text" required placeholder="Nome Completo" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.nome} onChange={e => setNewFunc({...newFunc, nome: e.target.value})} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.departamento} onChange={e => setNewFunc({...newFunc, departamento: e.target.value, setor: (e.target.value === 'SALÃO' ? setoresSalao : setoresCozinha)[0] || ''})}>
+                      <option value="SALÃO">SALÃO</option>
+                      <option value="COZINHA">COZINHA</option>
+                    </select>
+                    <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.setor} onChange={e => setNewFunc({...newFunc, setor: e.target.value})}>
+                      {(newFunc.departamento === 'SALÃO' ? setoresSalao : setoresCozinha).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <input type="text" placeholder="Turno (Ex: Noite, 10:00 as 18:00)" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newFunc.turno} onChange={e => setNewFunc({...newFunc, turno: e.target.value})} />
+                  
+                  <div className="flex gap-2">
+                    <button type="submit" className={`flex-1 ${editingFunc ? 'bg-emerald-600' : 'bg-indigo-600'} text-white py-2 rounded-lg text-sm font-bold`}>
+                      {editingFunc ? 'Salvar Alterações' : 'Cadastrar na Equipe'}
+                    </button>
+                    {editingFunc && (
+                      <button type="button" onClick={() => { setEditingFunc(null); setNewFunc({ nome: '', setor: '', departamento: deptoSelecionado, turno: '' }); }} className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold">
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
                 </form>
                 <form onSubmit={handleAddSetor} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                  <h3 className="text-sm font-semibold flex items-center gap-2"><Building className="w-4 h-4 text-orange-500" /> Adicionar Setor</h3>
-                  <input type="text" required placeholder="Nome do Setor" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm uppercase" value={newSetorName} onChange={e => setNewSetorName(e.target.value)} />
-                  <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-bold">Criar</button>
+                  <h3 className="text-sm font-semibold flex items-center gap-2"><Building className="w-4 h-4 text-orange-500" /> Adicionar Novo Setor</h3>
+                  <input type="text" required placeholder="Nome do Setor (Ex: GARÇOM)" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm uppercase" value={newSetorName} onChange={e => setNewSetorName(e.target.value)} />
+                  <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-bold">Criar Setor</button>
                 </form>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Integrantes</h4>
-                  <div className="border border-slate-200 rounded-xl divide-y overflow-hidden max-h-60 overflow-y-auto">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Integrantes Cadastrados</h4>
+                  <div className="border border-slate-200 rounded-xl divide-y overflow-hidden max-h-60 overflow-y-auto shadow-sm">
                     {funcionariosFiltrados.map(f => (
-                      <div key={f.id} className="flex items-center justify-between p-3 bg-white">
-                        <div className="flex items-center gap-3"><Avatar nome={f.nome} /><div><p className="text-sm font-bold">{f.nome}</p><p className="text-[10px] text-slate-500">{f.setor}</p></div></div>
-                        <button onClick={() => handleDeleteFunc(f.id)} className="text-rose-500 p-2 hover:bg-rose-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                      <div key={f.id} className="flex items-center justify-between p-3 bg-white hover:bg-slate-50">
+                        <div className="flex items-center gap-3">
+                          <Avatar nome={f.nome} />
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{f.nome}</p>
+                            <p className="text-[10px] text-slate-500 italic">{f.setor} {f.turno ? `• ${f.turno}` : ''}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => { setEditingFunc(f); setNewFunc({ nome: f.nome, setor: f.setor, departamento: f.departamento, turno: f.turno || '' }); }} className="text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition" title="Editar"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteFunc(f.id)} className="text-rose-500 p-2 hover:bg-rose-50 rounded-lg transition" title="Excluir"><Trash2 className="w-4 h-4" /></button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -635,7 +699,21 @@ export default function App() {
                       {funcs.map(func => (
                         <tr key={func.id} className="hover:bg-slate-50/50 transition-colors group/row">
                           <td className="px-4 py-2 sticky left-0 bg-white group-hover/row:bg-slate-50/95 z-10 border-r border-l print:bg-transparent shadow-[2px_0_4px_rgba(0,0,0,0.02)]">
-                            <div className="flex items-center gap-2.5"><div className="print:hidden"><Avatar nome={func.nome} /></div><span className="font-bold text-slate-800 print:text-black text-[12px] truncate max-w-[120px] print:max-w-none">{func.nome}</span></div>
+                            <div className="flex items-center gap-2.5">
+                              <div className="print:hidden">
+                                <Avatar nome={func.nome} />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-800 print:text-black text-[12px] truncate max-w-[120px] print:max-w-none">
+                                  {func.nome}
+                                </span>
+                                {func.turno && (
+                                  <span className="text-[8px] font-medium text-slate-400 print:text-black italic leading-none">
+                                    {func.turno}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </td>
                           {dias.map((_, idx) => {
                              const status = getStatusInfo(func.id, idx + 1);
