@@ -123,7 +123,16 @@
   }
 
   .print-sunday {
-    background-color: #f0f7ff !important; /* light blue */
+    background-color: #f5f3ff !important; /* violet-50 */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-status {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-weight: bold !important;
+    color: black !important;
   }
 
   /* Adjust Nama column for print */

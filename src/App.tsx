@@ -676,7 +676,7 @@ export default function App() {
                 <tr>
                   <th className="px-5 py-4 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-slate-50 print:bg-white print:relative print:border print:w-auto">NOME</th>
                   {dias.map((dia, idx) => (
-                    <th key={idx} className={`min-w-[40px] p-2 border-r text-center ${dia.getDay() === 0 ? 'bg-blue-50/80 print-sunday' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
+                    <th key={idx} className={`min-w-[40px] p-2 border-r text-center ${dia.getDay() === 0 ? 'bg-violet-100/80 print-sunday' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
                       <div className="flex flex-col"><span className={`text-[9px] font-bold uppercase ${isToday(dia) ? 'text-indigo-600' : 'text-slate-400 print:text-black'}`}>{format(dia, 'EE', { locale: ptBR }).substring(0,1)}</span><span className={`text-sm font-black ${isToday(dia) ? 'text-indigo-600' : 'text-slate-700 print:text-black'}`}>{format(dia, 'dd')}</span></div>
                     </th>
                   ))}
@@ -728,8 +728,8 @@ export default function App() {
                              const hasStatus = status.id !== 'trabalha';
                              const isSunday = dia.getDay() === 0;
                              return (
-                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '')} ${isSunday ? 'bg-blue-50/80 print-sunday' : ''}`}>
-                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:h-8 flex items-center justify-center font-bold text-xs print:text-[10px] ${status.textColor}`}>
+                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '').replace('bg-', 'print:bg-')} ${isSunday ? 'bg-violet-50/60 print-sunday' : ''}`}>
+                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:h-8 flex items-center justify-center font-bold text-xs print:text-[11px] print:text-black print-status ${status.textColor}`}>
                                    {hasStatus ? status.short : <span className="opacity-0 group-hover/row:opacity-100 text-lg font-light">+</span>}
                                  </button>
                                </td>
