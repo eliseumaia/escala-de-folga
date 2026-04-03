@@ -669,14 +669,14 @@ export default function App() {
           <h2 className="text-lg font-black uppercase tracking-widest">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
 
-        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden print:border-none w-full">
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-sm text-left">
+        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden print:border-none print:shadow-none w-full">
+          <div className="overflow-x-auto w-full print:overflow-visible">
+            <table className="w-full text-sm text-left print:table-auto border-collapse">
               <thead className="bg-slate-50 print:bg-white border-b">
                 <tr>
-                  <th className="px-5 py-4 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-slate-50 print:bg-white">NOME</th>
+                  <th className="px-5 py-4 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-slate-50 print:bg-white print:relative print:border print:w-auto">NOME</th>
                   {dias.map((dia, idx) => (
-                    <th key={idx} className={`min-w-[40px] p-2 border-r text-center ${dia.getDay() === 0 ? 'bg-blue-50/80' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
+                    <th key={idx} className={`min-w-[40px] p-2 border-r text-center ${dia.getDay() === 0 ? 'bg-blue-50/80 print-sunday' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
                       <div className="flex flex-col"><span className={`text-[9px] font-bold uppercase ${isToday(dia) ? 'text-indigo-600' : 'text-slate-400 print:text-black'}`}>{format(dia, 'EE', { locale: ptBR }).substring(0,1)}</span><span className={`text-sm font-black ${isToday(dia) ? 'text-indigo-600' : 'text-slate-700 print:text-black'}`}>{format(dia, 'dd')}</span></div>
                     </th>
                   ))}
@@ -711,7 +711,7 @@ export default function App() {
                       </tr>
                       {funcs.map(func => (
                         <tr key={func.id} className="hover:bg-slate-50/50 transition-colors group/row">
-                          <td className="px-4 py-2 sticky left-0 bg-white group-hover/row:bg-slate-50/95 z-10 border-r border-l print:bg-transparent shadow-[2px_0_4px_rgba(0,0,0,0.02)]">
+                          <td className="px-4 py-2 sticky left-0 bg-white group-hover/row:bg-slate-50/95 z-10 border-r border-l print:bg-white print:relative print:border shadow-[2px_0_4px_rgba(0,0,0,0.02)]">
                             <div className="flex items-center gap-2.5">
                               <div className="print:hidden">
                                 <Avatar nome={func.nome} />
@@ -723,12 +723,13 @@ export default function App() {
                               </div>
                             </div>
                           </td>
-                          {dias.map((_, idx) => {
+                          {dias.map((dia, idx) => {
                              const status = getStatusInfo(func.id, idx + 1);
                              const hasStatus = status.id !== 'trabalha';
+                             const isSunday = dia.getDay() === 0;
                              return (
-                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '')}`}>
-                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:h-6 flex items-center justify-center font-bold text-xs print:text-[10px] ${status.textColor}`}>
+                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '')} ${isSunday && !hasStatus ? 'bg-blue-50/50 print-sunday' : ''}`}>
+                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:h-8 flex items-center justify-center font-bold text-xs print:text-[10px] ${status.textColor}`}>
                                    {hasStatus ? status.short : <span className="opacity-0 group-hover/row:opacity-100 text-lg font-light">+</span>}
                                  </button>
                                </td>

@@ -79,45 +79,60 @@
 @media print {
   @page {
     size: A4 landscape;
-    margin: 5mm;
-  }
-  body, html {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
+    margin: 3mm;
   }
   
-  /* Forçar tabelas com linhas uniformes de 1px e caber no A4 */
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: white !important;
+  }
+
+  /* Hide everything by default */
+  header, 
+  nav, 
+  .print-hidden, 
+  [role="dialog"], 
+  button:not(.print-show),
+  .bg-slate-900\/40, 
+  .shadow-sm,
+  input:not([type="month"]) {
+    display: none !important;
+  }
+
+  /* Ensure the table container is visible and full width */
+  .max-w-\[1600px\] {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
   table {
-    border-collapse: collapse !important;
     width: 100% !important;
-    table-layout: fixed !important;
-  }
-  
-  th:first-child, td:first-child {
-    width: 15% !important;
-    white-space: nowrap;
-    overflow: hidden;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    font-size: 9px !important;
   }
 
   th, td {
-    border: 1px solid #000 !important;
-    padding: 0 !important;
-    font-size: 10px !important;
+    border: 1px solid #ddd !important;
+    padding: 2px !important;
   }
 
   .print-sunday {
-    background-color: #dbeafe !important; /* blue-100 */
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    background-color: #f0f7ff !important; /* light blue */
   }
 
-  /* Esconder elementos irrelevantes e resetar sombras */
-  * {
-    box-shadow: none !important;
+  /* Adjust Nama column for print */
+  th:first-child, td:first-child {
+    min-width: 100px !important;
+    position: relative !important;
+    left: 0 !important;
+    background-color: white !important;
   }
 }
 
