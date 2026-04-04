@@ -673,14 +673,18 @@ export default function App() {
           <div className="overflow-x-auto w-full print:overflow-visible">
             <table className="w-full text-sm text-left print:table-auto border-collapse">
               <thead className="bg-slate-50 print:bg-white border-b">
-                <tr>
-                  <th className="px-5 py-3 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-slate-50 print:bg-white print:relative print:border print:w-auto">NOME</th>
+                <tr className="print:bg-slate-50">
+                  <th rowSpan={2} className="px-5 py-3 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-slate-50 print:bg-white print:relative print:border print:w-auto">NOME</th>
                   {dias.map((dia, idx) => (
-                    <th key={idx} className={`min-w-[42px] p-2 border-r text-center ${dia.getDay() === 0 ? 'bg-violet-100/80 print-sunday' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
-                      <div className="flex flex-col leading-tight pb-0.5">
-                        <span className={`text-[11px] print:text-[11px] font-black uppercase ${isToday(dia) ? 'text-indigo-600' : 'text-slate-400 print:text-black'}`}>{format(dia, 'EE', { locale: ptBR }).substring(0,1)}</span>
-                        <span className={`text-xs print:text-[10px] font-bold ${isToday(dia) ? 'text-indigo-600' : 'text-slate-700 print:text-black'}`}>{format(dia, 'dd')}</span>
-                      </div>
+                    <th key={`day-${idx}`} className={`min-w-[42px] py-1 border-r text-center ${dia.getDay() === 0 ? 'bg-violet-100/80 print-sunday' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
+                      <span className={`text-[11px] print:text-[13px] font-black uppercase ${isToday(dia) ? 'text-indigo-600' : 'text-slate-400 print:text-black'}`}>{format(dia, 'EE', { locale: ptBR }).substring(0,1)}</span>
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {dias.map((dia, idx) => (
+                    <th key={`date-${idx}`} className={`min-w-[42px] py-1 border-r text-center ${dia.getDay() === 0 ? 'bg-violet-50/10 print-sunday' : dia.getDay() === 6 ? 'bg-slate-50/20' : ''}`}>
+                      <span className={`text-[10px] print:text-[11px] font-bold ${isToday(dia) ? 'text-indigo-600' : 'text-slate-700 print:text-black'}`}>{format(dia, 'dd')}</span>
                     </th>
                   ))}
                 </tr>

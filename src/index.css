@@ -115,11 +115,16 @@
     display: table-header-group !important;
   }
 
+  tr {
+    height: 14mm !important;
+  }
+
   th, td {
     border: 1px solid #999 !important;
-    padding: 3px 1px !important;
+    padding: 2px !important;
     color: black !important;
     background-color: transparent !important;
+    vertical-align: middle !important;
   }
 
   /* Force color printing */
