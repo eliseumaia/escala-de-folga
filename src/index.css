@@ -107,7 +107,7 @@
     width: 100% !important;
     table-layout: auto !important;
     border-collapse: collapse !important;
-    font-size: 8px !important;
+    font-size: 11px !important;
     border: 1px solid #000 !important;
   }
 
@@ -116,8 +116,8 @@
   }
 
   th, td {
-    border: 1px solid #ccc !important;
-    padding: 1px !important;
+    border: 1px solid #999 !important;
+    padding: 3px 1px !important;
     color: black !important;
     background-color: transparent !important;
   }
@@ -135,10 +135,10 @@
   }
 
   .print-status-text {
-    display: block !important;
+    display: flex !important;
     color: black !important;
-    font-weight: bold !important;
-    font-size: 10px !important;
+    font-weight: 900 !important;
+    font-size: 12px !important;
   }
 
   /* Hide everything irrelevant */
