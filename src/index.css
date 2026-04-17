@@ -107,7 +107,7 @@
     width: 100% !important;
     table-layout: auto !important;
     border-collapse: collapse !important;
-    font-size: 11px !important;
+    font-size: var(--print-font-size, 11px) !important;
     border: 1px solid #000 !important;
   }
 
@@ -116,15 +116,16 @@
   }
 
   tr {
-    height: 14mm !important;
+    height: var(--print-row-height, 9mm) !important;
   }
 
   th, td {
-    border: 1px solid #999 !important;
-    padding: 2px !important;
+    border: 1px solid #000 !important;
+    padding: 1px 2px !important;
     color: black !important;
     background-color: transparent !important;
     vertical-align: middle !important;
+    overflow: hidden !important;
   }
 
   /* Force color printing */
@@ -135,8 +136,31 @@
     text-shadow: none !important;
   }
 
+  .print-status-text {
+    font-size: var(--print-font-size, 11px) !important;
+    height: calc(var(--print-row-height, 9mm) * 0.9) !important;
+  }
+
+  /* Fixed widths for consistency */
+  .col-nome {
+    width: 35mm !important;
+    min-width: 35mm !important;
+    max-width: 35mm !important;
+  }
+  .col-dia {
+    width: 8.1mm !important; /* Adjusted to fit exactly in A4 landscape */
+    min-width: 8.1mm !important;
+    max-width: 8.1mm !important;
+  }
+  
+  table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
   .print-sunday {
-    background-color: #f5f3ff !important;
+    background-color: #cbd5e1 !important; /* Visual 40% gray for print */
   }
 
   .print-status-text {
@@ -160,9 +184,14 @@
   /* Fix first column being cut or sticky */
   th:first-child, td:first-child {
     position: static !important;
-    width: 120px !important;
-    min-width: 120px !important;
+    width: 35mm !important;
+    min-width: 35mm !important;
+    max-width: 35mm !important;
     background-color: white !important;
+  }
+
+  table, th, td, div, * {
+    box-sizing: border-box !important;
   }
 }
 

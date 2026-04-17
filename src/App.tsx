@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Printer, Users, UserPlus, 
   Trash2, Edit2, Check, X, Building, ChefHat, Utensils, MessageSquare, Send,
-  CheckCircle2, AlertCircle, RefreshCw
+  CheckCircle2, AlertCircle, RefreshCw, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { format, getDaysInMonth, startOfMonth, addDays, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,17 +20,25 @@ type User = {
   role: 'MASTER' | 'NORMAL';
   loja?: string;
 };
+type Setor = { 
+  id: string; 
+  nome: string; 
+  departamento: string; 
+  loja: string; 
+  ordem: number; 
+  created_at: string; 
+};
 
 // --- Constants ---
 const lojas = ['Do Sul', 'Porto Alegre', 'Porto Alegrense'];
 
 const statusOpcoes: StatusOption[] = [
-  { id: 'trabalha', label: 'Trabalha', short: '', colorClass: 'bg-transparent hover:bg-slate-100', textColor: 'text-slate-400' },
-  { id: 'folga', label: 'Folga', short: 'F', colorClass: 'bg-indigo-100 hover:bg-indigo-200 border-indigo-200', textColor: 'text-indigo-700' },
-  { id: 'banco_horas', label: 'Banco de Horas', short: 'BH', colorClass: 'bg-violet-100 hover:bg-violet-200 border-violet-200', textColor: 'text-violet-700' },
-  { id: 'atestado', label: 'Atestado', short: 'AT', colorClass: 'bg-rose-100 hover:bg-rose-200 border-rose-200', textColor: 'text-rose-700' },
-  { id: 'suspensao', label: 'Suspensão', short: 'SP', colorClass: 'bg-amber-100 hover:bg-amber-200 border-amber-200', textColor: 'text-amber-800' },
-  { id: 'ferias', label: 'Férias', short: 'FE', colorClass: 'bg-emerald-100 hover:bg-emerald-200 border-emerald-200', textColor: 'text-emerald-700' },
+  { id: 'trabalha', label: 'Trabalha', short: '', colorClass: 'bg-white', textColor: 'text-slate-400' },
+  { id: 'folga', label: 'Folga', short: 'F', colorClass: 'bg-white', textColor: 'text-indigo-700' },
+  { id: 'banco_horas', label: 'Banco de Horas', short: 'BH', colorClass: 'bg-white', textColor: 'text-violet-700' },
+  { id: 'atestado', label: 'Atestado', short: 'AT', colorClass: 'bg-white', textColor: 'text-rose-700' },
+  { id: 'suspensao', label: 'Suspensão', short: 'SP', colorClass: 'bg-white', textColor: 'text-amber-800' },
+  { id: 'ferias', label: 'Férias', short: 'FE', colorClass: 'bg-white', textColor: 'text-emerald-700' },
 ];
 
 // --- Helper Components ---
@@ -56,8 +64,8 @@ export default function App() {
   
   // Data States
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
-  const [setoresSalao, setSetoresSalao] = useState<string[]>([]);
-  const [setoresCozinha, setSetoresCozinha] = useState<string[]>([]);
+  const [setoresSalao, setSetoresSalao] = useState<Setor[]>([]);
+  const [setoresCozinha, setSetoresCozinha] = useState<Setor[]>([]);
   const [escala, setEscala] = useState<Record<string, string>>({});
   
   // Chat States
@@ -71,6 +79,7 @@ export default function App() {
   const [listaUsuarios, setListaUsuarios] = useState<User[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newFunc, setNewFunc] = useState({ nome: '', setor: '', departamento: 'SALÃO', turno: '' });
+  const [newSetorDepto, setNewSetorDepto] = useState('SALÃO');
   const [editingFunc, setEditingFunc] = useState<Funcionario | null>(null);
   const [tempUserForm, setTempUserForm] = useState({ username: '', password: '' });
 
@@ -82,12 +91,26 @@ export default function App() {
   const currentMesAno = format(mesSelecionado, 'yyyy-MM');
   const currentMessageKey = `chat-${lojaSelecionada}-${currentMesAno}`;
   const threadAtual = mensagens[currentMessageKey] || [];
+  const deptoColor = deptoSelecionado === 'SALÃO' ? 'orange' : 'amber';
+  const isCozinha = deptoSelecionado === 'COZINHA';
+  const tableBorderClass = 'border-black';
+  const tableBorderLightClass = 'border-black';
   const currentSetores = deptoSelecionado === 'SALÃO' ? setoresSalao : setoresCozinha;
   const setCurrentSetores = deptoSelecionado === 'SALÃO' ? setSetoresSalao : setSetoresCozinha;
   const funcionariosFiltrados = funcionarios.filter(f => f.loja === lojaSelecionada && f.departamento === deptoSelecionado);
   const diasNoMes = getDaysInMonth(mesSelecionado);
   const dias = Array.from({ length: diasNoMes }, (_, i) => addDays(startOfMonth(mesSelecionado), i));
   const lojasAcessiveis = user?.role === 'MASTER' ? lojas : lojas.filter(l => l === user?.loja);
+  
+  // Print Scaling
+  const activeSectorsCount = currentSetores.filter(s => s.ordem > 0 && funcionariosFiltrados.some(f => f.setor === s.nome)).length;
+  const totalPrintRows = funcionariosFiltrados.length + (activeSectorsCount * 1.5) + 4; // Factor in headers and sector gaps
+  const calculatedHeight = Math.max(3.8, Math.min(9, 170 / totalPrintRows));
+  const calculatedFontSize = Math.max(7, Math.min(11, (calculatedHeight / 9) * 11 + 1));
+  const printStyles = {
+    "--print-row-height": `${calculatedHeight}mm`,
+    "--print-font-size": `${calculatedFontSize}px`
+  } as React.CSSProperties;
 
   // --- Effects ---
   useEffect(() => {
@@ -124,11 +147,11 @@ export default function App() {
         .from('setores')
         .select('*')
         .eq('loja', lojaSelecionada)
-        .eq('departamento', deptoSelecionado);
+        .eq('departamento', deptoSelecionado)
+        .order('ordem', { ascending: true });
       if (sets) {
-         const nomesRaw = sets.map((s: any) => s.nome);
-         if (deptoSelecionado === 'SALÃO') setSetoresSalao(nomesRaw);
-         else setSetoresCozinha(nomesRaw);
+         if (deptoSelecionado === 'SALÃO') setSetoresSalao(sets);
+         else setSetoresCozinha(sets);
       }
 
       // 3. Escala
@@ -302,7 +325,8 @@ export default function App() {
 
   const saveSetorName = async (oldName: string, newName: string) => {
     const trimmed = newName.trim();
-    if (!trimmed || trimmed === oldName) {
+    const sectorObj = currentSetores.find(s => s.nome === oldName);
+    if (!trimmed || !sectorObj || trimmed === oldName) {
       setEditingSetorIdx(null);
       return;
     }
@@ -310,11 +334,9 @@ export default function App() {
     setIsSyncing(true);
     try {
       await supabase.from('setores').update({ nome: trimmed })
-        .eq('nome', oldName)
-        .eq('loja', lojaSelecionada)
-        .eq('departamento', deptoSelecionado);
+        .eq('id', sectorObj.id);
       
-      setCurrentSetores(prev => prev.map(s => s === oldName ? trimmed : s));
+      setCurrentSetores(prev => prev.map(s => s.nome === oldName ? { ...s, nome: trimmed } : s));
       setFuncionarios(prev => prev.map(f => 
         (f.setor === oldName && f.departamento === deptoSelecionado) ? { ...f, setor: trimmed } : f
       ));
@@ -328,16 +350,42 @@ export default function App() {
   const handleAddSetor = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newSetorName.trim().toUpperCase();
-    if (!trimmed || currentSetores.includes(trimmed)) return;
+    if (!trimmed || currentSetores.some(s => s.nome === trimmed)) return;
     
-    await supabase.from('setores').insert({ 
+    // Calculate next order
+    const nextOrder = currentSetores.length > 0 
+      ? Math.max(...currentSetores.map(s => s.ordem)) + 1 
+      : 0;
+
+    const { data: newS, error } = await supabase.from('setores').insert({ 
       nome: trimmed, 
-      departamento: deptoSelecionado, 
-      loja: lojaSelecionada 
-    });
+      departamento: newSetorDepto, 
+      loja: lojaSelecionada,
+      ordem: 0 // Default to 0 (unnumbered/hidden)
+    }).select().single();
     
-    setCurrentSetores(prev => [...prev, trimmed]);
+    if (newS) {
+      if (newSetorDepto === deptoSelecionado) {
+        setCurrentSetores(prev => [...prev, newS]);
+      }
+    }
     setNewSetorName('');
+  };
+
+  const handleUpdateOrder = async (sectorId: string, newOrder: number) => {
+    setIsSyncing(true);
+    try {
+      await supabase.from('setores').update({ ordem: newOrder }).eq('id', sectorId);
+      
+      setCurrentSetores(prev => {
+        const next = prev.map(s => s.id === sectorId ? { ...s, ordem: newOrder } : s);
+        return [...next].sort((a, b) => a.ordem - b.ordem);
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
 
@@ -346,7 +394,7 @@ export default function App() {
        setNewFunc(prev => ({ 
          ...prev, 
          departamento: deptoSelecionado,
-         setor: (deptoSelecionado === 'SALÃO' ? setoresSalao : setoresCozinha)[0] || ''
+         setor: (deptoSelecionado === 'SALÃO' ? setoresSalao : setoresCozinha)[0]?.nome || ''
        }));
      }
   }, [isManageModalOpen, deptoSelecionado, setoresSalao, setoresCozinha]);
@@ -355,12 +403,11 @@ export default function App() {
     e.preventDefault();
     const targetDepto = newFunc.departamento || deptoSelecionado;
     const sectors = targetDepto === 'SALÃO' ? setoresSalao : setoresCozinha;
-    const targetSetor = newFunc.setor || sectors[0] || '';
+    const targetSetor = (typeof newFunc.setor === 'object' ? (newFunc.setor as any).nome : newFunc.setor) || sectors[0]?.nome || '';
     
     if (!newFunc.nome || !targetSetor) return;
     
     if (editingFunc) {
-      // Update logic
       const payload = {
         nome: newFunc.nome,
         setor: targetSetor,
@@ -373,7 +420,7 @@ export default function App() {
       if (!error) {
         setFuncionarios(prev => prev.map(f => f.id === editingFunc.id ? { ...f, ...payload } : f));
         setEditingFunc(null);
-        setNewFunc({ nome: '', setor: sectors[0] || '', departamento: targetDepto, turno: '' });
+        setNewFunc({ nome: '', setor: sectors[0]?.nome || '', departamento: targetDepto, turno: '' });
       }
       return;
     }
@@ -390,7 +437,7 @@ export default function App() {
 
     await supabase.from('funcionarios').insert(payload);
     setFuncionarios([...funcionarios, payload]);
-    setNewFunc({ nome: '', setor: sectors[0] || '', departamento: targetDepto, turno: '' });
+    setNewFunc({ nome: '', setor: sectors[0]?.nome || '', departamento: targetDepto, turno: '' });
   };
 
   const handleDeleteFunc = async (id: string) => {
@@ -399,12 +446,13 @@ export default function App() {
   };
   
   const handleDeleteSetor = async (setorName: string) => {
+    const sectorObj = currentSetores.find(s => s.nome === setorName);
+    if (!sectorObj) return;
+
     await supabase.from('setores').delete()
-      .eq('nome', setorName)
-      .eq('loja', lojaSelecionada)
-      .eq('departamento', deptoSelecionado);
+      .eq('id', sectorObj.id);
     
-    setCurrentSetores(prev => prev.filter(s => s !== setorName));
+    setCurrentSetores(prev => prev.filter(s => s.id !== sectorObj.id));
     setFuncionarios(prev => prev.filter(f => !(f.setor === setorName && f.departamento === deptoSelecionado)));
   };
 
@@ -476,7 +524,7 @@ export default function App() {
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans print:bg-white print:p-0">
       
       {/* Modals */}
-      {isManageModalOpen && (
+      {isManageModalOpen && user?.role === 'MASTER' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm print:hidden p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -498,7 +546,7 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Departamento</label>
-                      <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600" value={newFunc.departamento} onChange={e => setNewFunc({...newFunc, departamento: e.target.value, setor: (e.target.value === 'SALÃO' ? setoresSalao : setoresCozinha)[0] || ''})}>
+                      <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600" value={newFunc.departamento} onChange={e => setNewFunc({...newFunc, departamento: e.target.value, setor: (e.target.value === 'SALÃO' ? setoresSalao : setoresCozinha)[0]?.nome || ''})}>
                         <option value="SALÃO">SALÃO</option>
                         <option value="COZINHA">COZINHA</option>
                       </select>
@@ -506,7 +554,7 @@ export default function App() {
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Turno</label>
                       <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-emerald-600" value={newFunc.setor} onChange={e => setNewFunc({...newFunc, setor: e.target.value})}>
-                        {(newFunc.departamento === 'SALÃO' ? setoresSalao : setoresCozinha).map(s => <option key={s} value={s}>{s}</option>)}
+                        {(newFunc.departamento === 'SALÃO' ? setoresSalao : setoresCozinha).map(s => <option key={s.id} value={s.nome}>{s.nome}</option>)}
                       </select>
                     </div>
                   </div>
@@ -525,9 +573,18 @@ export default function App() {
 
                 <form onSubmit={handleAddSetor} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2"><Building className="w-4 h-4 text-orange-500" /> Cadastrar Novo Turno</h3>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Nome do Turno (Ex: MANHÃ, NOITE)</label>
-                    <input type="text" required placeholder="Digite o nome do turno..." className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm uppercase font-bold" value={newSetorName} onChange={e => setNewSetorName(e.target.value)} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Nome do Turno</label>
+                      <input type="text" required placeholder="Ex: MANHÃ" className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm uppercase font-bold" value={newSetorName} onChange={e => setNewSetorName(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Departamento</label>
+                      <select className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-indigo-600" value={newSetorDepto} onChange={e => setNewSetorDepto(e.target.value)}>
+                        <option value="SALÃO">SALÃO</option>
+                        <option value="COZINHA">COZINHA</option>
+                      </select>
+                    </div>
                   </div>
                   <button type="submit" className="w-full bg-orange-500 text-white py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-orange-600">Criar Turno</button>
                 </form>
@@ -556,10 +613,20 @@ export default function App() {
                 <div className="space-y-3">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Turnos Cadastrados</h4>
                   <div className="border border-slate-200 rounded-xl divide-y overflow-hidden max-h-60 overflow-y-auto">
-                    {currentSetores.map(s => (
-                      <div key={s} className="flex items-center justify-between p-3 bg-white hover:bg-orange-50/30">
-                        <span className="text-sm font-black text-orange-600 uppercase italic">{s}</span>
-                        <button onClick={() => handleDeleteSetor(s)} className="text-rose-500 p-2 hover:bg-rose-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                    {currentSetores.map((s) => (
+                      <div key={s.id} className="flex items-center justify-between p-3 bg-white hover:bg-slate-50 group">
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="number" 
+                            className="w-12 h-8 bg-slate-100 border border-slate-200 rounded text-center text-xs font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            value={s.ordem}
+                            onChange={(e) => handleUpdateOrder(s.id, parseInt(e.target.value) || 0)}
+                          />
+                          <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">{s.nome}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => handleDeleteSetor(s.nome)} className="text-rose-500 p-2 hover:bg-rose-50 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -643,7 +710,14 @@ export default function App() {
             {user.role === 'MASTER' && (
               <button onClick={() => setIsSettingsModalOpen(true)} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm flex items-center gap-2 text-emerald-600"><Edit2 className="w-4 h-4" /> Acessos</button>
             )}
-            <button onClick={() => setIsManageModalOpen(true)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm flex items-center gap-2 text-indigo-600"><Users className="w-4 h-4" /> Equipe</button>
+            {user.role === 'MASTER' && (
+              <button 
+                onClick={() => setIsManageModalOpen(true)} 
+                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm flex items-center gap-2 text-indigo-600"
+              >
+                <Users className="w-4 h-4" /> Equipe
+              </button>
+            )}
             <button onClick={() => setIsCommentsModalOpen(true)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm flex items-center gap-2 relative">
               <MessageSquare className="w-4 h-4 text-indigo-600" /> Mensagens
               {threadAtual.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{threadAtual.length}</span>}
@@ -669,57 +743,68 @@ export default function App() {
           <h2 className="text-lg font-black uppercase tracking-widest">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
 
-        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden print:border-none print:shadow-none w-full">
+        <div style={printStyles} className={`bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:border-none print:shadow-none w-full`}>
           <div className="overflow-x-auto w-full print:overflow-visible">
-            <table className="w-full text-sm text-left print:table-auto border-collapse">
-              <thead className="bg-slate-50 print:bg-white border-b">
-                <tr className="print:bg-slate-50">
-                  <th rowSpan={2} className="px-5 py-3 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-slate-50 print:bg-white print:relative print:border print:w-auto">NOME</th>
+            <table className="w-full text-sm text-left print:table-fixed border-collapse">
+              <colgroup>
+                <col className="col-nome" />
+                {dias.map((_, i) => (
+                  <col key={i} className="col-dia" />
+                ))}
+              </colgroup>
+              <thead className={`bg-white print:bg-white border-b ${tableBorderClass}`}>
+                <tr className="bg-white">
+                  <th className="px-5 py-3 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-white print:bg-white print:relative print:border print:w-[35mm] print:min-w-[35mm] col-nome">NOME</th>
                   {dias.map((dia, idx) => (
-                    <th key={`day-${idx}`} className={`min-w-[42px] py-1 border-r text-center ${dia.getDay() === 0 ? 'bg-violet-100/80 print-sunday' : dia.getDay() === 6 ? 'bg-slate-100/50' : ''}`}>
+                    <th key={`day-${idx}`} className={`min-w-[42px] print:min-w-0 print:px-0 py-1 border-r ${tableBorderClass} text-center ${dia.getDay() === 0 ? 'bg-slate-200 print-sunday' : ''} col-dia print:w-[8.1mm]`}>
                       <span className={`text-[11px] print:text-[13px] font-black uppercase ${isToday(dia) ? 'text-indigo-600' : 'text-slate-400 print:text-black'}`}>{format(dia, 'EE', { locale: ptBR }).substring(0,1)}</span>
                     </th>
                   ))}
                 </tr>
                 <tr>
+                  <th className={`border-r ${tableBorderClass} col-nome bg-white print:bg-white`}></th>
                   {dias.map((dia, idx) => (
-                    <th key={`date-${idx}`} className={`min-w-[42px] py-1 border-r text-center ${dia.getDay() === 0 ? 'bg-violet-50/10 print-sunday' : dia.getDay() === 6 ? 'bg-slate-50/20' : ''}`}>
+                    <th key={`date-${idx}`} className={`min-w-[42px] print:min-w-0 print:px-0 py-1 border-r ${tableBorderClass} text-center ${dia.getDay() === 0 ? 'bg-slate-200 print-sunday' : ''} col-dia print:w-[8.1mm]`}>
                       <span className={`text-[10px] print:text-[11px] font-bold ${isToday(dia) ? 'text-indigo-600' : 'text-slate-700 print:text-black'}`}>{format(dia, 'dd')}</span>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {currentSetores.map((setorNome, setorIdx) => {
+                {currentSetores.filter(s => s.ordem > 0).map((setor, setorIdx) => {
+                  const setorNome = setor.nome;
                   const funcs = funcionariosFiltrados.filter(f => f.setor === setorNome);
                   if (funcs.length === 0) return null;
                   return (
-                    <React.Fragment key={setorIdx}>
-                      <tr className="bg-slate-100/90 group print:bg-slate-50 border-y-2 border-slate-200">
-                        <td colSpan={diasNoMes + 1} className="py-2.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-5 bg-orange-500 rounded-full" />
-                            <div className="flex flex-1 justify-between items-center">
-                              {editingSetorIdx === setorIdx ? (
-                                <div className="flex gap-2 w-full max-w-sm">
-                                  <input autoFocus className="w-full border rounded px-2 py-1 text-sm font-black outline-none uppercase" value={editSetorTempName} onChange={e => setEditSetorTempName(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') saveSetorName(setorNome, editSetorTempName); if(e.key === 'Escape') setEditingSetorIdx(null); }} />
-                                  <button onClick={() => saveSetorName(setorNome, editSetorTempName)} className="text-emerald-600"><Check className="w-5 h-5" /></button>
-                                  <button onClick={() => setEditingSetorIdx(null)}><X className="w-5 h-5" /></button>
-                                </div>
-                              ) : (
-                                <>
-                                  <h3 className="text-xs font-black tracking-widest text-slate-700 uppercase italic">TURNO: {setorNome}</h3>
-                                  <button onClick={() => { setEditSetorTempName(setorNome); setEditingSetorIdx(setorIdx); }} className="opacity-0 group-hover:opacity-100 print:hidden absolute right-0"><Edit2 className="w-3.5 h-3.5 text-slate-400" /></button>
-                                </>
-                              )}
-                            </div>
+                    <React.Fragment key={setor.id}>
+                      <tr className={`group print:bg-white border-y ${tableBorderClass} bg-white`}>
+                        <td colSpan={diasNoMes + 1} className="py-4 px-4 print:py-0">
+                          <div className="flex flex-1 justify-center items-center relative">
+                            {editingSetorIdx === setorIdx ? (
+                              <div className="flex gap-2 w-full max-w-sm justify-center">
+                                <input autoFocus className="w-full border rounded-lg px-4 py-1 text-sm font-black outline-none uppercase shadow-inner" value={editSetorTempName} onChange={e => setEditSetorTempName(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') saveSetorName(setorNome, editSetorTempName); if(e.key === 'Escape') setEditingSetorIdx(null); }} />
+                                <button onClick={() => saveSetorName(setorNome, editSetorTempName)} className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 p-1 rounded-md transition-colors"><Check className="w-5 h-5" /></button>
+                                <button onClick={() => setEditingSetorIdx(null)} className="text-slate-400 hover:text-slate-500 bg-slate-50 p-1 rounded-md transition-colors"><X className="w-5 h-5" /></button>
+                              </div>
+                            ) : (
+                              <>
+                                <h3 className="text-sm font-black tracking-[0.2em] text-slate-800 uppercase italic bg-white px-6 py-1 rounded-full shadow-sm border border-slate-100 print:shadow-none print:border-none print:bg-transparent print:py-0 print:px-0 print:text-base">
+                                  {setorNome}
+                                </h3>
+                                {user.role === 'MASTER' && (
+                                  <button onClick={() => { setEditSetorTempName(setorNome); setEditingSetorIdx(setorIdx); }} className="opacity-0 group-hover:opacity-100 print:hidden absolute right-2">
+                                    <Edit2 className="w-4 h-4 text-slate-400 hover:text-indigo-600 transition-colors" />
+                                  </button>
+                                )}
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
                       {funcs.map(func => (
-                        <tr key={func.id} className="hover:bg-slate-50/50 transition-colors group/row">
-                          <td className="px-4 py-2 sticky left-0 bg-white group-hover/row:bg-slate-50/95 z-10 border-r border-l print:bg-white print:relative print:border shadow-[2px_0_4px_rgba(0,0,0,0.02)]">
-                            <div className="flex items-center gap-2.5">
+                        <tr key={func.id} className={`group/row border-b ${tableBorderLightClass} print:bg-transparent`}>
+                          <td className={`px-4 py-2 print:py-1 print:px-2 sticky left-0 bg-white z-10 border-r ${tableBorderClass} border-l print:bg-white print:relative print:border shadow-[2px_0_4px_rgba(0,0,0,0.02)] col-nome`}>
+                            <div className="flex items-center gap-2.5 print:gap-0">
                               <div className="print:hidden">
                                 <Avatar nome={func.nome} />
                               </div>
@@ -735,8 +820,8 @@ export default function App() {
                              const hasStatus = status.id !== 'trabalha';
                              const isSunday = dia.getDay() === 0;
                              return (
-                               <td key={idx} className={`p-0 border-r text-center ${status.colorClass.replace('hover:', '').replace('bg-', 'print:bg-')} ${isSunday ? 'bg-violet-50/60 print-sunday' : ''}`}>
-                                 <div className="hidden print:flex items-center justify-center font-black text-black text-[12px] h-10 w-full print-status-text">
+                               <td key={idx} className={`p-0 border-r ${tableBorderClass} text-center ${isSunday ? 'bg-slate-200 print-sunday' : 'bg-white'} col-dia print:px-0 print:w-[8.1mm]`}>
+                                 <div className="hidden print:flex items-center justify-center font-black text-black text-[12px] h-7 w-full print-status-text">
                                    {hasStatus ? status.short : ''}
                                  </div>
                                  <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:hidden flex items-center justify-center font-bold text-xs ${status.textColor}`}>
