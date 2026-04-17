@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Printer, Users, UserPlus, 
   Trash2, Edit2, Check, X, Building, ChefHat, Utensils, MessageSquare, Send,
-  CheckCircle2, AlertCircle, RefreshCw, ChevronUp, ChevronDown
+  CheckCircle2, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { format, getDaysInMonth, startOfMonth, addDays, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -91,8 +91,6 @@ export default function App() {
   const currentMesAno = format(mesSelecionado, 'yyyy-MM');
   const currentMessageKey = `chat-${lojaSelecionada}-${currentMesAno}`;
   const threadAtual = mensagens[currentMessageKey] || [];
-  const deptoColor = deptoSelecionado === 'SALÃO' ? 'orange' : 'amber';
-  const isCozinha = deptoSelecionado === 'COZINHA';
   const tableBorderClass = 'border-black';
   const tableBorderLightClass = 'border-black';
   const currentSetores = deptoSelecionado === 'SALÃO' ? setoresSalao : setoresCozinha;
@@ -352,12 +350,10 @@ export default function App() {
     const trimmed = newSetorName.trim().toUpperCase();
     if (!trimmed || currentSetores.some(s => s.nome === trimmed)) return;
     
-    // Calculate next order
-    const nextOrder = currentSetores.length > 0 
-      ? Math.max(...currentSetores.map(s => s.ordem)) + 1 
-      : 0;
+    // Calculate next order (unused for now)
 
-    const { data: newS, error } = await supabase.from('setores').insert({ 
+
+    const { data: newS } = await supabase.from('setores').insert({ 
       nome: trimmed, 
       departamento: newSetorDepto, 
       loja: lojaSelecionada,
