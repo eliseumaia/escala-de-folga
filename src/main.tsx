@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-// Deployment trigger: Migrated to GitHub Pages
+// Deployment trigger: URL fix v2
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
