@@ -732,7 +732,7 @@ export default function App() {
             <Calendar className="w-5 h-5 text-indigo-600" />
             <input type="month" className="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-bold" value={format(mesSelecionado, 'yyyy-MM')} onChange={e => {
               const [year, month] = e.target.value.split('-').map(Number);
-              setMesSelecionado(new Date(year, month - 1, 2));
+              setMesSelecionado(new Date(year, month - 1, 15));
             }} />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -743,7 +743,7 @@ export default function App() {
         </div>
 
         <div className="hidden print:block text-center mt-2 mb-4">
-          <h2 className="text-lg font-black uppercase tracking-widest">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
+          <h2 className="text-lg font-black uppercase tracking-widest" translate="no">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
 
         <div style={printStyles} className={`bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:border-none print:shadow-none w-full`}>
