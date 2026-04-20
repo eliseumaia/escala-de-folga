@@ -5,6 +5,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/escala-de-folga/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
