@@ -690,7 +690,7 @@ export default function App() {
       <div className="max-w-[1600px] mx-auto p-4 sm:p-8 space-y-6 print:p-0 print:m-0 w-full">
         <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 print:hidden">
           <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Escala de Folga</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900" translate="no">Escala de Folga</h1>
             <p className="text-slate-500 font-medium">Controle de jornadas e folgas do time.</p>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
@@ -719,7 +719,7 @@ export default function App() {
               <MessageSquare className="w-4 h-4 text-indigo-600" /> Mensagens
               {threadAtual.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{threadAtual.length}</span>}
             </button>
-            <button onClick={() => window.print()} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 flex items-center gap-2">
+            <button onClick={() => window.print()} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 flex items-center gap-2" translate="no">
               <Printer className="w-4 h-4" /> 
               <span>Imprimir</span>
             </button>
