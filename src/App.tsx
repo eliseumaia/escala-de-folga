@@ -39,6 +39,7 @@ const statusOpcoes: StatusOption[] = [
   { id: 'atestado', label: 'Atestado', short: 'AT', colorClass: 'bg-white', textColor: 'text-rose-700' },
   { id: 'suspensao', label: 'Suspensão', short: 'SP', colorClass: 'bg-white', textColor: 'text-amber-800' },
   { id: 'ferias', label: 'Férias', short: 'FE', colorClass: 'bg-white', textColor: 'text-emerald-700' },
+  { id: 'afastado', label: 'Afastado', short: 'AF', colorClass: 'bg-white', textColor: 'text-slate-500' },
 ];
 
 // --- Helper Components ---
@@ -718,7 +719,10 @@ export default function App() {
               <MessageSquare className="w-4 h-4 text-indigo-600" /> Mensagens
               {threadAtual.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{threadAtual.length}</span>}
             </button>
-            <button onClick={() => window.print()} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 flex items-center gap-2"><Printer className="w-4 h-4" /> Imprimir</button>
+            <button onClick={() => window.print()} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 flex items-center gap-2">
+              <Printer className="w-4 h-4" /> 
+              <span>Imprimir</span>
+            </button>
             <button onClick={handleLogout} className="p-2.5 bg-white border border-slate-200 text-rose-500 rounded-xl hover:bg-rose-50 shadow-sm"><X className="w-5 h-5" /></button>
           </div>
         </header>
@@ -726,7 +730,10 @@ export default function App() {
         <div className="bg-white rounded-2xl border shadow-sm p-4 flex flex-col xl:flex-row gap-6 print:hidden">
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-indigo-600" />
-            <input type="month" className="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-bold" value={format(mesSelecionado, 'yyyy-MM')} onChange={e => setMesSelecionado(new Date(e.target.value + '-02'))} />
+            <input type="month" className="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-bold" value={format(mesSelecionado, 'yyyy-MM')} onChange={e => {
+              const [year, month] = e.target.value.split('-').map(Number);
+              setMesSelecionado(new Date(year, month - 1, 2));
+            }} />
           </div>
           <div className="flex flex-wrap gap-2">
             {statusOpcoes.filter(s => s.id !== 'trabalha').map(s => (

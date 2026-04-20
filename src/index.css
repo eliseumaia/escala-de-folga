@@ -165,9 +165,13 @@
 
   .print-status-text {
     display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     color: black !important;
-    font-weight: 900 !important;
-    font-size: 12px !important;
+    font-weight: 800 !important;
+    font-size: 10px !important; /* Slightly smaller to ensure fit */
+    height: 100% !important;
+    width: 100% !important;
   }
 
   /* Hide everything irrelevant */
