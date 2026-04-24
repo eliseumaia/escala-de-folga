@@ -9,9 +9,9 @@ import { ptBR } from 'date-fns/locale';
 import { supabase } from './lib/supabase';
 
 // --- Types ---
-type Funcionario = { id: string; nome: string; loja: string; setor: string; departamento: string };
+type Funcionario = { id: string; nome: string; loja: string; setor: string; departamento: string; ordem?: number };
 type StatusOption = { id: string; label: string; short: string; colorClass: string; textColor: string };
-type Mensagem = { id: string; texto: string; autor: string; data: string; loja?: string; mes_ano?: string };
+type Mensagem = { id: string; texto: string; autor: string; data: string; loja?: string; mes_ano?: string; departamento?: string };
 type User = {
   id: string;
   username: string;
@@ -90,13 +90,13 @@ export default function App() {
 
   // Computed Values
   const currentMesAno = format(mesSelecionado, 'yyyy-MM');
-  const currentMessageKey = `chat-${lojaSelecionada}-${currentMesAno}`;
+  const currentMessageKey = `chat-${lojaSelecionada}-${deptoSelecionado}-${currentMesAno}`;
   const threadAtual = mensagens[currentMessageKey] || [];
   const tableBorderClass = 'border-black';
   const tableBorderLightClass = 'border-black';
   const currentSetores = deptoSelecionado === 'SALÃO' ? setoresSalao : setoresCozinha;
   const setCurrentSetores = deptoSelecionado === 'SALÃO' ? setSetoresSalao : setSetoresCozinha;
-  const funcionariosFiltrados = funcionarios.filter(f => f.loja === lojaSelecionada && f.departamento === deptoSelecionado);
+  const funcionariosFiltrados = funcionarios.filter(f => f.loja === lojaSelecionada && f.departamento === deptoSelecionado).sort((a,b) => (a.ordem || 0) - (b.ordem || 0));
   const diasNoMes = getDaysInMonth(mesSelecionado);
   const dias = Array.from({ length: diasNoMes }, (_, i) => addDays(startOfMonth(mesSelecionado), i));
   const lojasAcessiveis = user?.role === 'MASTER' ? lojas : lojas.filter(l => l === user?.loja);
@@ -171,6 +171,7 @@ export default function App() {
         .from('mensagens')
         .select('*')
         .eq('loja', lojaSelecionada)
+        .eq('departamento', deptoSelecionado)
         .eq('mes_ano', currentMesAno)
         .order('data', { ascending: true });
       if (msgs) {
@@ -235,9 +236,10 @@ export default function App() {
     
     const msgData = {
       texto: novaMensagem.trim(),
-      autor: user?.role === 'MASTER' ? 'Adm' : 'Local',
+      autor: user?.role === 'MASTER' ? 'Adm' : (deptoSelecionado === 'SALÃO' ? 'Salão' : 'Cozinha'),
       data: new Date().toISOString(),
       loja: lojaSelecionada,
+      departamento: deptoSelecionado,
       mes_ano: currentMesAno
     };
     
@@ -369,6 +371,18 @@ export default function App() {
     setNewSetorName('');
   };
 
+  const handleUpdateFuncOrder = async (funcId: string, newOrder: number) => {
+    setIsSyncing(true);
+    try {
+      await supabase.from('funcionarios').update({ ordem: newOrder }).eq('id', funcId);
+      setFuncionarios(prev => prev.map(f => f.id === funcId ? { ...f, ordem: newOrder } : f));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleUpdateOrder = async (sectorId: string, newOrder: number) => {
     setIsSyncing(true);
     try {
@@ -429,7 +443,8 @@ export default function App() {
       loja: lojaSelecionada,
       setor: targetSetor,
       departamento: targetDepto,
-      turno: newFunc.turno
+      turno: newFunc.turno,
+      ordem: 0
     };
 
     await supabase.from('funcionarios').insert(payload);
@@ -518,7 +533,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans print:bg-white print:p-0">
+    <div className="h-screen bg-[#f8fafc] text-slate-900 font-sans print:h-auto print:bg-white print:p-0 flex flex-col overflow-hidden print:overflow-visible">
       
       {/* Modals */}
       {isManageModalOpen && user?.role === 'MASTER' && (
@@ -593,6 +608,13 @@ export default function App() {
                     {funcionariosFiltrados.map(f => (
                       <div key={f.id} className="flex items-center justify-between p-3 bg-white hover:bg-slate-50">
                         <div className="flex items-center gap-3">
+                          <input 
+                            type="number" 
+                            className="w-12 h-8 bg-slate-100 border border-slate-200 rounded text-center text-xs font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            value={f.ordem || 0}
+                            onChange={(e) => handleUpdateFuncOrder(f.id, parseInt(e.target.value) || 0)}
+                            title="Ordem de exibição"
+                          />
                           <Avatar nome={f.nome} />
                           <div>
                             <p className="text-sm font-bold text-slate-800">{f.nome}</p>
@@ -674,21 +696,34 @@ export default function App() {
               {threadAtual.length === 0 ? <p className="text-center text-slate-400 text-sm mt-20">Sem mensagens.</p> : threadAtual.map(msg => (
                 <div key={msg.id} className="bg-white border rounded-xl p-3 shadow-sm">
                   <div className="flex justify-between items-center mb-1"><span className="text-xs font-bold text-indigo-600">{msg.autor}</span><span className="text-[10px] text-slate-400">{format(new Date(msg.data), "dd/MM HH:mm")}</span></div>
-                  <p className="text-sm text-slate-700">{msg.texto}</p>
+                  <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{msg.texto}</p>
                 </div>
               ))}
             </div>
             <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2">
-              <input type="text" className="flex-1 bg-slate-50 border rounded-xl px-4 py-2 text-sm outline-none" placeholder="Digite aqui..." value={novaMensagem} onChange={e => setNovaMensagem(e.target.value)} />
-              <button type="submit" className="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700"><Send className="w-4 h-4" /></button>
+              <textarea 
+                className="flex-1 bg-slate-50 border rounded-xl px-4 py-2 text-sm outline-none resize-none overflow-y-auto" 
+                placeholder="Digite aqui... (Shift+Enter para pular linha)" 
+                rows={2}
+                value={novaMensagem} 
+                onChange={e => setNovaMensagem(e.target.value)} 
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e as any);
+                  }
+                }}
+              />
+              <button type="submit" className="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 flex-shrink-0 h-10 self-end"><Send className="w-4 h-4" /></button>
             </form>
           </div>
         </div>
       )}
 
       {/* Main Dashboard */}
-      <div className="max-w-[1600px] mx-auto p-4 sm:p-8 space-y-6 print:p-0 print:m-0 w-full">
-        <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 print:hidden">
+      <div className="max-w-[1600px] mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6 print:p-0 print:m-0 w-full flex flex-col h-full">
+        <div className="flex-shrink-0 space-y-4 sm:space-y-6">
+          <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 print:hidden">
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900" translate="no">Escala de Folga</h1>
             <p className="text-slate-500 font-medium">Controle de jornadas e folgas do time.</p>
@@ -741,13 +776,14 @@ export default function App() {
             ))}
           </div>
         </div>
+        </div>
 
         <div className="hidden print:block text-center mt-2 mb-4">
           <h2 className="text-lg font-black uppercase tracking-widest" translate="no">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
 
-        <div style={printStyles} className={`bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:border-none print:shadow-none w-full`}>
-          <div className="overflow-x-auto w-full print:overflow-visible">
+        <div style={printStyles} className={`flex-1 min-h-0 bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:overflow-visible print:border-none print:shadow-none w-full flex flex-col print:block`}>
+          <div className="overflow-auto flex-1 w-full print:overflow-visible">
             <table className="w-full text-sm text-left print:table-fixed border-collapse">
               <colgroup>
                 <col className="col-nome" />
@@ -755,9 +791,9 @@ export default function App() {
                   <col key={i} className="col-dia" />
                 ))}
               </colgroup>
-              <thead className={`bg-white print:bg-white border-b ${tableBorderClass}`}>
+              <thead className={`bg-white print:bg-white border-b ${tableBorderClass} sticky top-0 z-20`}>
                 <tr className="bg-white">
-                  <th className="px-5 py-3 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-10 w-48 border-r bg-white print:bg-white print:relative print:border print:w-[35mm] print:min-w-[35mm] col-nome">NOME</th>
+                  <th className="px-5 py-3 font-bold uppercase text-[10px] tracking-wider sticky left-0 z-30 top-0 w-48 border-r bg-white print:bg-white print:relative print:border print:w-[35mm] print:min-w-[35mm] col-nome shadow-[2px_0_0_rgb(0,0,0)] md:shadow-none print:shadow-none">NOME</th>
                   {dias.map((dia, idx) => (
                     <th key={`day-${idx}`} className={`min-w-[42px] print:min-w-0 print:px-0 py-1 border-r ${tableBorderClass} text-center ${dia.getDay() === 0 ? 'bg-slate-200 print-sunday' : ''} col-dia print:w-[8.1mm]`}>
                       <span className={`text-[11px] print:text-[13px] font-black uppercase ${isToday(dia) ? 'text-indigo-600' : 'text-slate-400 print:text-black'}`}>{format(dia, 'EE', { locale: ptBR }).substring(0,1)}</span>
