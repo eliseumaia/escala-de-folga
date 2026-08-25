@@ -40,6 +40,7 @@ const statusOpcoes: StatusOption[] = [
   { id: 'suspensao', label: 'Suspensão', short: 'SP', colorClass: 'bg-white', textColor: 'text-amber-800' },
   { id: 'ferias', label: 'Férias', short: 'FE', colorClass: 'bg-white', textColor: 'text-emerald-700' },
   { id: 'afastado', label: 'Afastado', short: 'AF', colorClass: 'bg-white', textColor: 'text-slate-500' },
+  { id: 'extra', label: 'Extra', short: 'E', colorClass: 'bg-white', textColor: 'text-cyan-700' },
 ];
 
 // --- Helper Components ---
