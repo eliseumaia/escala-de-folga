@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Printer, Users, UserPlus, 
   Trash2, Edit2, Check, X, Building, ChefHat, Utensils, MessageSquare, Send,
-  CheckCircle2, AlertCircle, RefreshCw
+  CheckCircle2, AlertCircle, RefreshCw, Lock, LockOpen
 } from 'lucide-react';
 import { format, getDaysInMonth, startOfMonth, addDays, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -84,6 +84,9 @@ export default function App() {
   const [newSetorDepto, setNewSetorDepto] = useState('SALÃO');
   const [editingFunc, setEditingFunc] = useState<Funcionario | null>(null);
   const [tempUserForm, setTempUserForm] = useState({ username: '', password: '' });
+
+  // Edit Lock State — always starts as false (locked) on load
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Sync States
   const [isSyncing, setIsSyncing] = useState(false);
@@ -286,6 +289,7 @@ export default function App() {
   };
 
   const handleStatusClick = async (funcId: string, dia: number) => {
+    if (!isEditMode) return; // Safety lock: only allow edits when edit mode is active
     const currentStatus = escala[`${funcId}-${dia}`] || 'trabalha';
     const currentIndex = statusOpcoes.findIndex(s => s.id === currentStatus);
     const nextIndex = (currentIndex + 1) % statusOpcoes.length;
@@ -755,6 +759,17 @@ export default function App() {
               <MessageSquare className="w-4 h-4 text-indigo-600" /> Mensagens
               {threadAtual.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{threadAtual.length}</span>}
             </button>
+            <button
+              onClick={() => setIsEditMode(prev => !prev)}
+              className={`px-4 py-2 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 border transition-all duration-200 ${
+                isEditMode
+                  ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
+                  : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {isEditMode ? <LockOpen className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              {isEditMode ? 'Editando...' : 'Alterar Escala'}
+            </button>
             <button onClick={() => window.print()} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 flex items-center gap-2" translate="no">
               <Printer className="w-4 h-4" /> 
               <span>Imprimir</span>
@@ -864,8 +879,8 @@ export default function App() {
                                  <div className="hidden print:flex items-center justify-center font-black text-black text-[12px] h-7 w-full print-status-text">
                                    {hasStatus ? status.short : ''}
                                  </div>
-                                 <button onClick={() => handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:hidden flex items-center justify-center font-bold text-xs ${status.textColor}`}>
-                                   {hasStatus ? status.short : <span className="opacity-0 group-hover/row:opacity-100 text-lg font-light">+</span>}
+                                 <button onClick={() => isEditMode && handleStatusClick(func.id, idx + 1)} className={`w-full h-10 print:hidden flex items-center justify-center font-bold text-xs ${status.textColor} ${!isEditMode ? 'cursor-default' : 'cursor-pointer'}`}>
+                                   {hasStatus ? status.short : isEditMode ? <span className="opacity-0 group-hover/row:opacity-100 text-lg font-light">+</span> : null}
                                  </button>
                                </td>
                              );
