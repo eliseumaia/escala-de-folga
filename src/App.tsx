@@ -87,7 +87,6 @@ export default function App() {
 
   // Edit Lock State — always starts as false (locked) on load
   const [isEditMode, setIsEditMode] = useState(false);
-  const [printMode, setPrintMode] = useState<'escala' | 'folgas'>('escala');
 
   // Sync States
   const [isSyncing, setIsSyncing] = useState(false);
@@ -776,16 +775,17 @@ export default function App() {
             </button>
             {user.role === 'MASTER' && (
               <button onClick={() => {
-                setPrintMode('folgas');
-                setTimeout(() => window.print(), 100);
+                document.body.classList.add('print-folgas');
+                window.print();
+                document.body.classList.remove('print-folgas');
               }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-emerald-700 flex items-center gap-2" translate="no">
                 <Printer className="w-4 h-4" /> 
                 <span>Folgas</span>
               </button>
             )}
             <button onClick={() => {
-                setPrintMode('escala');
-                setTimeout(() => window.print(), 100);
+                document.body.classList.remove('print-folgas');
+                window.print();
               }} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 flex items-center gap-2" translate="no">
               <Printer className="w-4 h-4" /> 
               <span>Imprimir</span>
@@ -810,11 +810,12 @@ export default function App() {
         </div>
         </div>
 
-        <div className={`hidden ${printMode === 'escala' ? 'print:block' : ''} text-center mt-2 mb-4`}>
+        <div id="print-escala">
+        <div className="hidden print:block text-center mt-2 mb-4">
           <h2 className="text-lg font-black uppercase tracking-widest" translate="no">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
 
-        <div style={printStyles} className={`flex-1 min-h-0 bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden ${printMode === 'escala' ? 'print:overflow-visible print:border-none print:shadow-none print:block' : 'print:hidden'} w-full flex flex-col`}>
+        <div style={printStyles} className={`flex-1 min-h-0 bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:overflow-visible print:border-none print:shadow-none w-full flex flex-col`}>
           <div className="overflow-auto flex-1 w-full print:overflow-visible">
             <table className="w-full text-sm text-left print:table-fixed border-collapse">
               <colgroup>
@@ -910,8 +911,9 @@ export default function App() {
             </table>
           </div>
         </div>
+        </div>
 
-        <div className={`hidden ${printMode === 'folgas' ? 'print:block' : ''} bg-white text-black p-8`}>
+        <div id="print-folgas" className="bg-white text-black p-8">
           <h2 className="text-2xl font-black uppercase text-center mb-6">Relatório de Folgas - {deptoSelecionado} / {lojaSelecionada} - {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
           <table className="w-2/3 mx-auto text-base text-left border-collapse border border-black">
             <thead>

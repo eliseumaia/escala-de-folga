@@ -83,7 +83,7 @@
   }
   
   /* Reset All Layout-Breaking Properties */
-  body, html, #root, .App, main, div, section {
+  body, html, #root, .App, main, section {
     overflow: visible !important;
     height: auto !important;
     width: auto !important;
@@ -92,6 +92,20 @@
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    display: block !important;
+  }
+
+  /* Control print sections visibility */
+  #print-escala {
+    display: block !important;
+  }
+  #print-folgas {
+    display: none !important;
+  }
+  body.print-folgas #print-escala {
+    display: none !important;
+  }
+  body.print-folgas #print-folgas {
     display: block !important;
   }
 
