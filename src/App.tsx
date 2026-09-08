@@ -810,12 +810,11 @@ export default function App() {
         </div>
         </div>
 
-        <div id="print-escala" className="flex-1 min-h-0 flex flex-col">
-        <div className="hidden print:block text-center mt-2 mb-4">
+        <div id="print-escala" className="hidden print:block text-center mt-2 mb-4">
           <h2 className="text-lg font-black uppercase tracking-widest" translate="no">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
 
-        <div style={printStyles} className={`flex-1 min-h-0 bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:overflow-visible print:border-none print:shadow-none w-full flex flex-col`}>
+        <div style={printStyles} id="print-escala-table" className={`flex-1 min-h-0 bg-white rounded-2xl border ${tableBorderClass} shadow-sm overflow-hidden print:overflow-visible print:border-none print:shadow-none w-full flex flex-col`}>
           <div className="overflow-auto flex-1 w-full print:overflow-visible">
             <table className="w-full text-sm text-left print:table-fixed border-collapse">
               <colgroup>
@@ -911,9 +910,8 @@ export default function App() {
             </table>
           </div>
         </div>
-        </div>
 
-        <div id="print-folgas" className="bg-white text-black p-8">
+        <div id="print-folgas" className="hidden bg-white text-black p-8">
           <h2 className="text-2xl font-black uppercase text-center mb-6">Relatório de Folgas - {deptoSelecionado} / {lojaSelecionada} - {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
           <table className="w-2/3 mx-auto text-base text-left border-collapse border border-black">
             <thead>

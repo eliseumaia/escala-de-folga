@@ -95,14 +95,21 @@
     display: block !important;
   }
 
-  /* Control print sections visibility */
+  /* Control print sections visibility - default: show escala, hide folgas */
   #print-escala {
+    display: block !important;
+  }
+  #print-escala-table {
     display: block !important;
   }
   #print-folgas {
     display: none !important;
   }
+  /* When printing folgas: hide escala, show folgas */
   body.print-folgas #print-escala {
+    display: none !important;
+  }
+  body.print-folgas #print-escala-table {
     display: none !important;
   }
   body.print-folgas #print-folgas {
