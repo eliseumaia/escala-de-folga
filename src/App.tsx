@@ -810,7 +810,7 @@ export default function App() {
         </div>
         </div>
 
-        <div id="print-escala">
+        <div id="print-escala" className="flex-1 min-h-0 flex flex-col">
         <div className="hidden print:block text-center mt-2 mb-4">
           <h2 className="text-lg font-black uppercase tracking-widest" translate="no">{deptoSelecionado} • {lojaSelecionada} • {format(mesSelecionado, "MMMM / yyyy", { locale: ptBR })}</h2>
         </div>
